@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="../../log4js.js"></script>
+
+    <!-- Setup all Loggers -->
+    <script type="text/javascript" src="loggers.js"></script>
+  </head>
+  <body>
+    <h1>Log4JS Test Page</h1>
+    <div style="overflow: hidden;">
+      <ul id="logs1" style="float:left; width: 500px;">
+      </ul>
+      <ul id="logs2" style="float:left; width: 500px;">
+      </ul>
+    </div>
+    <script type="text/javascript">
+
+      // Explicitly register a new Logger under domain: public.examples.ajax
+      Log4JS.newLogger('public.examples.ajax', [
+        new Log4JSHtmlAdapter({target: '#logs2', template: '#template', messageEl: 'em'}),
+        new Log4JSAjaxAdapter('/log', 'post', false, 'message')
+      ]);
+
+      // Grab instances using loggers that were setup using in loggers.js
+      var instance1 = new Log4JSInstance('public.frontend.test.log4j');
+      var instance2 = new Log4JSInstance('public');
+
+      // This instance will use the 'public.examples.ajax' logger since it shares
+      // a same root (and is the closest match)
+      var instance3 = new Log4JSInstance('public.examples.ajax.keypress-logger');
+
+      $(function () {
+        $('body').mousemove(function (event) {
+          instance1.info('mouse at position {0} &times; {1}', event.screenX, event.screenY);
+        });
+
+        $('body').click(function (event) {
+          // Mute the 1st instance
+          instance1.muted ? instance1.unmute() : instance1.mute();
+          instance2.info('mouse click at position {0} &times; {1}', event.screenX, event.screenY);
+        });
+
+        $('body').keypress(function (event) {
+          instance3.info('key pressed: {0}', event.charCode);
+        });
+      });
+    </script>
+  </body>
+
+  <!-- Template used for the HTML logger -->
+  <script type="text/html" id="template">
+    <li><em></em></li>
+  </script>
+</html>
