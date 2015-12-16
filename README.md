@@ -2,18 +2,39 @@
 
 ##### Log4JS2 is a logging library for JavaScript inspired by the excellent Log4J library.
 
-__Loggers__
-    
-Loggers are collections of Adapters, registered using a domain name (string) that uses dot-notation so
-that hierarchies can be formed. As many loggers as necessary can be setup, each with it's own set of
-adapters and properties. In the application, simply request a logger by domain name, and
-a direct match OR a direct ancestor of that domain will be utilized.
-    
 __Adapters__
     
-Adapters do the actual logging, and as many Adapters as necessary can be added to each
-logger. There are adapters to output logs to the console, the DOM, AJAX, and others are being implemented.
+Adapters (`Log4JSAdapter`) do the actual logging, and as many Adapters as necessary can be added to each
+Logger. There are adapters to output logs to the console, the DOM, AJAX, and others are being implemented.
 In fact, you can write your own custom Adapters and plug them in!
+    
+__Loggers__
+    
+Loggers (`Log4JSLogger`) contain a collection of Adapters. They are registered using a domain name (string) that uses
+dot-notation so that hierarchies can be formed. As many loggers as necessary can be setup, each with it's own set of
+adapters and properties. In the application, simply request a logger by domain name, and (if registered) a Logger will
+be found that is a direct match OR a direct ancestor of that domain name.
+
+__Logger Domains__
+
+Loggers are registered using domain names, which are just strings that use simple dot-notation to express
+hierarches. _For example,_ if a Logger is registered using domain `example`, then searching by `example.foo.bar`
+and `example.fizz.buzz` will both yield the Logger `example`.
+    
+If in the future another Logger is registered using domain `example.foo`, then searching for `example.foo.bar` will
+yield the Logger `example.foo`.
+
+This allows applications to organize Loggers in a hierarchical and clear manner.
+
+__Logger Instances__
+
+Instances (`Log4JSInstance`) are the main logging interface used by your application. Instances are created using a
+domain name and they will output logs to the Logger identified by that domain. Simple, clean, efficient. A typical example:
+
+ `var instance = new Log4JSInstance("example.foo.bar");`
+ `instance.log("Hello world!");`
+ 
+ Create as many instances as necessary, attached to as many Loggers.
     
 __Layouts__ _(coming soon)_
     
