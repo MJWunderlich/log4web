@@ -22,7 +22,7 @@ hierarches. _For example,_ if a Logger is registered using domain `example`, the
 and `example.fizz.buzz` will both yield the Logger `example`.
     
 If in the future another Logger is registered using domain `example.foo`, then searching for `example.foo.bar` will
-yield the Logger `example.foo`.
+yield the Logger `example.foo` because it's a _closer_ match.
 
 This allows applications to organize Loggers in a hierarchical and clear manner.
 
@@ -30,9 +30,10 @@ __Logger Instances__
 
 Instances (`Log4JSInstance`) are the main logging interface used by your application. Instances are created using a
 domain name and they will output logs to the Logger identified by that domain. Simple, clean, efficient. A typical example:
-
- `var instance = new Log4JSInstance("example.foo.bar");`
- `instance.log("Hello world!");`
+````
+var instance = new Log4JSInstance("example.foo.bar");
+instance.log("Hello world!");
+````
  
  Create as many instances as necessary, attached to as many Loggers.
     
@@ -71,8 +72,11 @@ It will also output logs to the Browser console.
 __Setup:__
 
 ````
-Log4JS.newLogger('ui.notify', [
+Log4JS.newLogger('ui.dom', [
+    // This adapter will append messages to the DOM
     new Log4JSHtmlAdapter({template: '#element-to-use-as-template', target: '#element-to-append-to', messageEl: '.message-element'}),
+    
+    // Also output to the console just for good measure :)
     new Log4JSConsoleAdapter()
 ]);
 ````
@@ -80,8 +84,8 @@ Log4JS.newLogger('ui.notify', [
 __In application:__
 
 ````
-// This instance will use the 'ui.notify' logger, since it's the closest match
-var instance = new Log4JSInstance('ui.notify.dom');
+// This instance will use the 'ui.dom' logger, since it's the closest match
+var instance = new Log4JSInstance('ui.dom.notifications');
 ...
 instance.info('Image has uploaded successfully');
 ````
@@ -93,13 +97,7 @@ Messages use the following format: `"this {0} and that {1} and this also {2}"`, 
 __Example__
 
 ````
-Log4JS.newLogger('ui.notify', [
-    new Log4JSConsoleAdapter()
-]);
-
-...
-
-var instance = new Log4JSInstance('ui.notify.formatted.text.example');
+var instance = new Log4JSInstance('ui');
 instance.log("this {0} and that {1} and this also {2}", "THIS", "THAT", "THIS ALSO");
 ````
 
