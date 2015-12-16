@@ -1,21 +1,26 @@
-# Log4JS
+# Log4JS2
 
-##### Log4JS is a logging library for JavaScript inspired by the excellent Log4J library.
+##### Log4JS2 is a logging library for JavaScript inspired by the excellent Log4J library.
 
-Log4JS is a logging library for JavaScript inspired by the excellent Log4J library.
-As many loggers as necessary can be setup, each categorized by domain. Domains use dot-notation so
-that hierarchies can be formed. In the application, simply request a logger by domain name, and
+__Loggers__
+    
+Loggers are collections of Adapters, registered using a domain name (string) that uses dot-notation so
+that hierarchies can be formed. As many loggers as necessary can be setup, each with it's own set of
+adapters and properties. In the application, simply request a logger by domain name, and
 a direct match OR a direct ancestor of that domain will be utilized.
     
+__Adapters__
     
 Adapters do the actual logging, and as many Adapters as necessary can be added to each
-logger. There are adapters to output logs to the console, the DOM, AJAX, and others can be
-written and plugged in.
+logger. There are adapters to output logs to the console, the DOM, AJAX, and others are being implemented.
+In fact, you can write your own custom Adapters and plug them in!
+    
+__Layouts__ _(coming soon)_
+    
+Layouts tell Adapters how to format their output. Whether outputting HTML to the DOM, or text messages to the Console,
+or JSON objects to AJAX endpoints -- layouts will permit the total customization of messages.
     
     
-Copyright (c) 2015 Mario J. Wunderlich
-Released under the MIT license
-
 ### A Logger to output to Console
 
 The following logger will only output to console.
