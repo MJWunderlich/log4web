@@ -108,7 +108,7 @@ Log4JS.load({
 
 ### Muting output
 
-Both Loggers and Instances can be muted so that logs stop being output. This is useful to dynamically control log output.
+Both Loggers and Instances can be muted (and un-muted) to enable/disable logging output. This gives the application the ability to dynamically turn logging on/off.
 
 __Mute a Logger__
 
@@ -116,6 +116,7 @@ When a logger is muted, all instances that use that logger will also be muted.
 
 ````
 var logger = Log4JS.getLogger('domain.for.logger');
+...
 logger && logger.mute();
 ````
 
@@ -125,5 +126,6 @@ When an instance is muted, only logs from that instance will be muted.
 
 ````
 var instance = new Log4JSInstance('domain.for.logger');
+...
 instance.mute();
 ````
