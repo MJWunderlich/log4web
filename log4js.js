@@ -12,7 +12,6 @@
  * logger. There are adapters to output logs to the console, the DOM, AJAX, and others can be
  * written and plugged in.
  *
- * Copyright (c) 2015 Mario J. Wunderlich
  * Released under the MIT license
  */
 
@@ -83,18 +82,36 @@
     });
   }
 
+  function namedFormat(fmt, data) {
+    return fmt.replace(/{([\w\d]+)}/g, function (match, name) {
+      if (typeof data[name] == 'undefined') {
+        return match;
+      }
+      return '' + data[name];
+    });
+  }
+
+  var Log4JSClass = {
+    extend: function (base, methods) {
+      return $.extend({}, base.prototype, methods);
+    }
+  };
+
   // ****** MEAT & POTATOES ****** //
 
-  var Log4JSRegistry = function() {
+  /**
+   * Class Log4JSRegistry
+   * @constructor
+   */
+  var Log4JSRegistry = function () {
     this._instancesTable = {};
-    this._instances = [];
   };
   Log4JSRegistry.prototype = {
-    find: function(domain, fullMatchOnly) {
+    find: function (domain, fullMatchOnly) {
       var items, instance;
 
       domain = domain || 'null';
-      items  = domain.split('.');
+      items = domain.split('.');
 
       while (items.length) {
         domain = items.join('.');
@@ -109,14 +126,14 @@
       return false;
     },
 
-    add: function(instance) {
+    add: function (instance) {
       if (!!this.find(instance.domain, true)) {
         throw new Error(format('Log4JS instance with domain \'{0}\' already registered', instance.domain));
       }
-      this._instancesTable[ instance.domain ] = instance;
+      this._instancesTable[instance.domain] = instance;
     },
 
-    remove: function(domain) {
+    remove: function (domain) {
       if (!this.find(domain, true)) {
         throw new Error(format('Log4JS instance with domain \'{0}\' not registered', domain));
       }
@@ -124,32 +141,54 @@
     }
   };
 
+  var Log4JSAdapter = function(layout) {
+    this._layout = layout;
+  };
+  Log4JSAdapter.prototype = Log4JSClass.extend(Object, {
+    get layout() {
+      return this._layout;
+    },
+
+    set layout(layout) {
+      this._layout = layout;
+    },
+
+    formatMessage: function(date, type, message, additionalData) {
+      if (this._layout) {
+        return this._layout.format(date, type, message, additionalData);
+      }
+      return message;
+    }
+  });
+
   /**
    * Class Log4JSConsoleAdapter
-   *
+   * @constructor
    */
-  var Log4JSConsoleAdapter = function () {
+  var Log4JSConsoleAdapter = function (layout) {
+    Log4JSAdapter.apply(this, arguments);
     this._engine = console;
   };
-  Log4JSConsoleAdapter.prototype = {
+  Log4JSConsoleAdapter.prototype = Log4JSClass.extend(Log4JSAdapter, {
     get engine() {
       return this._engine;
     },
 
     _defaultOutput: function (type, message, additionalData) {
-
+      //message = this.formatMessage((new Date()).toDateString(), type, message, additionalData);
     },
 
     write: function (type, message, additionalData) {
-      if (isMethodSupported(this.engine, type)) {
-        var method = this.engine[type];
-        method.call(this.engine, message);
+      message = this.formatMessage((new Date()).toDateString(), type, message, additionalData);
+      if (isMethodSupported(this._engine, type)) {
+        var method = this._engine[type];
+        method.call(this._engine, message);
       }
       else {
         this._defaultOutput.apply(this, arguments);
       }
     }
-  };
+  });
 
   /**
    * Class Log4JSAjaxAdapter
@@ -223,26 +262,30 @@
    *
    * @constructor
    */
-  var Log4JSHtmlAdapter = function (options) {
+  var Log4JSHtmlAdapter = function (options, layout) {
+    Log4JSAdapter.call(this, layout);
     options = options || {};
     this._target = options.target || false;
     this._template = options.template || false;
     this._messageEl = options.messageEl || false;
   };
-  Log4JSHtmlAdapter.prototype = {
+  Log4JSHtmlAdapter.prototype = Log4JSClass.extend(Log4JSAdapter, {
     write: function (type, message) {
-      var sel = $(this._template);
-      var template = $($.parseHTML(sel.length ? sel.text() : this._template));
-      $(this._messageEl, template).html( message );
+      var sel, template;
+      sel = $(this._template);
+      template = $($.parseHTML(sel.length ? sel.text() : this._template));
+      message = this.formatMessage((new Date()).toDateString(), type, message);
+      $(this._messageEl, template).html(message);
       template.appendTo($(this._target));
     }
-  };
+  });
 
-  var Log4JSInstance = function(domain) {
+  var Log4JSInstance = function (domain) {
     this._domain = domain;
     this._instance = Log4JS.getLogger(domain);
     this._muted = 0;
   };
+
   Log4JSInstance.prototype = {
     get domain() {
       return this._domain;
@@ -256,12 +299,14 @@
       return this._instance || Log4JS.getLogger(domain);
     },
 
-    mute: function() {
-      this._muted ++;
+    mute: function () {
+      this._muted++;
+      return this;
     },
 
-    unmute: function() {
-      this._muted --;
+    unmute: function () {
+      this._muted--;
+      return this;
     },
 
     log: function (fmt) {
@@ -271,27 +316,83 @@
 
     info: function (fmt) {
       if (this.muted) return;
-      this.instance.log.apply(this.instance, arguments);
+      this.instance.info.apply(this.instance, arguments);
     },
 
     warn: function (fmt) {
       if (this.muted) return;
-      this.instance.log.apply(this.instance, arguments);
+      this.instance.warn.apply(this.instance, arguments);
     },
 
     error: function (fmt) {
       if (this.muted) return;
-      this.instance.log.apply(this.instance, arguments);
+      this.instance.error.apply(this.instance, arguments);
     }
   };
+
+
+  /**
+   * Class Log4JSLayout
+   * @constructor
+   *
+   * What is a layout?
+   * How should layouts work?
+   *
+   * A layout is a data structure that defines HOW a message will be styled.
+   * It can take many forms: json, html, xml, plaintext, etc.
+   * Furthermore, the layout must be exposed through a generic interface, so that any
+   * Adaptor can use any layout.
+   */
+  var Log4JSLayout = function (format) {
+    this._format = format || '[{date}]: {type}: {message}';
+  };
+  Log4JSLayout.prototype = {
+    format: function(date, type, message, additionalData) {
+      var data = $.extend({
+        date: date,
+        type: type,
+        message: message
+      }, additionalData || {});
+      return namedFormat(this._format, data);
+    }
+  };
+
+  /**
+   * Class Log4JSJSONLayout
+   *
+   * @param jsonFormat
+   * @constructor
+   */
+  var Log4JSJSONLayout = function(jsonFormat) {
+    Log4JSLayout.call(this, jsonFormat);
+    //this._format = $.extend({}, jsonFormat);
+  };
+  Log4JSJSONLayout.prototype = Log4JSClass.extend(Log4JSLayout, {
+    format: function (message, date, type, additionalData) {
+      var data, format, key, value;
+      data = $.extend({}, (additionalData || {}), {
+        message: message,
+        date: date,
+        type: type
+      });
+      format = $.extend({}, this._format);
+      for (key in format) {
+        value = this._format[key];
+        value = namedFormat(value, data);
+        format[key] = value;
+      }
+      return format;
+    }
+  });
 
   /**
    * Class Log4JS
    * @constructor
    */
-  var Log4JS = function (domain, adapters) {
+  var Log4JS = function (domain, adapters, attachToSystemErrors) {
     this._domain = domain ? domain.toLowerCase() : 'null';
     this._adapters = [];
+    this._attachToSystemErrors = false;
     this._version = {
       get major() {
         return '0'
@@ -319,17 +420,36 @@
     },
 
     get adapters() {
-      return [].concat( this._adapters );
+      return [].concat(this._adapters);
     },
 
-    registerAdapter: function(adapter) {
+    get isAttachedToSystemErrors() {
+      return this._attachToSystemErrors;
+    },
+
+    set attachToSystemErrors(attachToSystemErrors) {
+      var self = this;
+      var attach = !!attachToSystemErrors;
+      if (attach == this._attachToSystemErrors) {
+        return;
+      }
+
+      if (attach) {
+        $(window).error(function (event) {
+          var errorMessage = namedFormat('{message} {filename} {lineno}', event.originalEvent);
+          self.error(errorMessage);
+        });
+      }
+    },
+
+    registerAdapter: function (adapter) {
       if (typeof adapter != 'object' || typeof adapter.write != 'function') {
         throw new Error('Invalid Log4JS adapter');
       }
-      this._adapters.push( adapter );
+      this._adapters.push(adapter);
     },
 
-    registerAdapters: function(adapterArray) {
+    registerAdapters: function (adapterArray) {
       for (var i = 0; i < adapterArray.length; i++) {
         var adapter = adapterArray[i];
         this.registerAdapter(adapter);
@@ -338,7 +458,6 @@
 
     _write: function (type, fmt /* ... */) {
       var message = format.apply(null, slice.call(arguments, 1));
-      message = format('[{0}]: {1}', (new Date()).toLocaleString(), message);
       for (var i = 0; i < this._adapters.length; i++) {
         var obj = this._adapters[i];
         obj.write(type, message);
@@ -373,7 +492,7 @@
    * @static
    * @returns {*}
    */
-  Log4JS.getLogger = function(domain) {
+  Log4JS.getLogger = function (domain) {
     domain = domain || 'null';
     var instance = log4JSLoggerRegistry.find(domain);
     if (!instance && domain == 'null') {
@@ -384,22 +503,23 @@
   };
 
 
-  Log4JS.newLogger = function(domain, adapters) {
+  Log4JS.newLogger = function (domain, adapters, attach) {
     var instance = log4JSLoggerRegistry.find(domain, true);
     if (!instance) {
-      instance = new Log4JS(domain);
+      instance = new Log4JS(domain, adapters, attach);
+      instance.attachToSystemErrors = attach;
       log4JSLoggerRegistry.add(instance);
     }
 
-    adapters && instance.registerAdapters(adapters);
+    //adapters && instance.registerAdapters(adapters);
     return instance;
   };
 
-  Log4JS.load = function(json) {
+  Log4JS.load = function (json) {
     var key, item;
     for (key in json) {
       item = json[key];
-      Log4JS.newLogger(key, item.adapters);
+      Log4JS.newLogger(key, item.adapters, item.attachToErrorHandler);
     }
   };
 
@@ -407,6 +527,8 @@
 
   globals.Log4JS = Log4JS;
   globals.Log4JSInstance = Log4JSInstance;
+  globals.Log4JSLayout = Log4JSLayout;
+  globals.Log4JSJSONLayout = Log4JSJSONLayout;
   globals.Log4JSConsoleAdapter = Log4JSConsoleAdapter;
   globals.Log4JSAjaxAdapter = Log4JSAjaxAdapter;
   globals.Log4JSHtmlAdapter = Log4JSHtmlAdapter;

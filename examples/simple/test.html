@@ -20,33 +20,51 @@
     <script type="text/javascript">
 
       // Explicitly register a new Logger under domain: public.examples.ajax
-      Log4JS.newLogger('public.examples.ajax', [
-        new Log4JSHtmlAdapter({target: '#logs2', template: '#template', messageEl: 'em'}),
-        new Log4JSAjaxAdapter('/log', 'post', false, 'message')
-      ]);
+      Log4JS.newLogger('public.frontend.test.log4j', [
+        new Log4JSConsoleAdapter( new Log4JSLayout() ),
+        new Log4JSConsoleAdapter( new Log4JSJSONLayout({
+          m: '{message}',
+          d: '{date}',
+          t: '{type}'
+        }) ),
+        new Log4JSHtmlAdapter({
+          target: '#logs1',
+          template: '#template',
+          messageEl: 'em'
+        }, new Log4JSLayout())
+      ], true);
+
+      var instance1, instance2, instance3;
 
       // Grab instances using loggers that were setup using in loggers.js
-      var instance1 = new Log4JSInstance('public.frontend.test.log4j');
-      var instance2 = new Log4JSInstance('public');
+      instance2 = new Log4JSInstance('public.frontend.test.log4j');
+
+      // This instance will use the 'public' logger since it's a direct match
+      instance1 = new Log4JSInstance('public');
+      instance1.mute();
 
       // This instance will use the 'public.examples.ajax' logger since it shares
       // a same root (and is the closest match)
-      var instance3 = new Log4JSInstance('public.examples.ajax.keypress-logger');
+      instance3 = new Log4JSInstance('public.examples.ajax.keypress-logger');
 
       $(function () {
         $('body').mousemove(function (event) {
-          instance1.info('mouse at position {0} &times; {1}', event.screenX, event.screenY);
+          instance1.info('mouse at position {0}, {1}', event.screenX, event.screenY);
         });
 
         $('body').click(function (event) {
-          // Mute the 1st instance
-          instance1.muted ? instance1.unmute() : instance1.mute();
-          instance2.info('mouse click at position {0} &times; {1}', event.screenX, event.screenY);
+          instance2.error('mouse click at position {0}, {1}', event.screenX, event.screenY);
         });
 
         $('body').keypress(function (event) {
           instance3.info('key pressed: {0}', event.charCode);
         });
+
+        // This will cause an error, which will be caught and logged by any
+        // loggers attached to handle errors
+        var a = null;
+        a.func();
+
       });
     </script>
   </body>
