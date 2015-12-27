@@ -37,10 +37,30 @@ instance.log("Hello world!");
  
  Create as many instances as necessary, attached to as many Loggers.
     
-__Layouts__ _(coming soon)_
+__Layouts__ _(new)_
     
-Layouts tell Adapters how to format their output. Whether outputting HTML to the DOM, or text messages to the Console,
-or JSON objects to AJAX endpoints -- layouts will permit the total customization of messages.
+Layouts are optional, and when used, they tell Adapters how to format their output. Layouts can be used with any Adapter -- whether appending HTML to the DOM, writing text to Console, or sending JSON objects through AJAX.
+
+There are 2 types of Layoouts: `Log4JSLayout` and `Log4JSJSONLayout` and each one has a special way of specifying their formats.
+
+`Log4JSLayout` is a simple text layout, that uses a simple string format. For example: `"This is a message '{message}' with log type {type} created at {date}"` will cause an Adapter to output "This is a message 'foo bar' with log type 'info' created at 2015-12-27 14:37:00"
+
+`Log4JSJSONLayout` is a json layout, that uses a JS object for it's format. For example, the following json format:
+```
+var format = {
+  what: '{message'},
+  type: '{type}',
+  when: '{date}'
+};
+```
+will be used to output the following json:
+```
+{
+  what: 'foo bar',
+  type: 'info',
+  when: '2015-12-27 14:37:00'
+}
+```
     
     
 ### A Logger to output to Console
