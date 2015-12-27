@@ -3,10 +3,14 @@
   <head>
     <meta charset="UTF-8">
     <title></title>
+    
+    <!-- Log4JS2 depends on jQuery (for now) -->
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    
+    <!-- Include Log4JS2 -->
     <script type="text/javascript" src="../../log4js.js"></script>
 
-    <!-- Setup all Loggers -->
+    <!-- Include our loggers script that will setup our Loggers -->
     <script type="text/javascript" src="loggers.js"></script>
   </head>
   <body>
@@ -17,10 +21,14 @@
       <ul id="logs2" style="float:left; width: 500px;">
       </ul>
     </div>
-    <script type="text/javascript">
+    <script type="texto avascript">
 
-      // Explicitly register a new Logger under domain: public.examples.ajax
-      Log4JS.newLogger('public.frontend.test.log4j', [
+      // Explicitly register a new Logger under domain: public.frontend
+      // This logger will have the following adapters:
+      //  - A Console adapter (Log4JSConsoleAdapter) that outputs traditional strings
+      //  - A Console adapter (Log4JSConsoleAdapter) that outputs JSON (using a Log4JSJSONLayout)
+      //  - A Html Adapter (Log4JSHtmlAdapter) that appends log strings to the specified DOM element
+      Log4JS.newLogger('public.frontend', [
         new Log4JSConsoleAdapter( new Log4JSLayout() ),
         new Log4JSConsoleAdapter( new Log4JSJSONLayout({
           m: '{message}',
@@ -28,20 +36,24 @@
           t: '{type}'
         }) ),
         new Log4JSHtmlAdapter({
+          // Append HTML
           target: '#logs1',
+          // Use the HTML defined by this template
           template: '#template',
+          // Append message to <em> tag
           messageEl: 'em'
         }, new Log4JSLayout())
       ], true);
 
       var instance1, instance2, instance3;
 
-      // Grab instances using loggers that were setup using in loggers.js
-      instance2 = new Log4JSInstance('public.frontend.test.log4j');
-
       // This instance will use the 'public' logger since it's a direct match
+      // And mute the instance
       instance1 = new Log4JSInstance('public');
       instance1.mute();
+
+      // Create a logger instance that will use the public.frontend logger we created above
+      instance2 = new Log4JSInstance('public.frontend.test.log4j');
 
       // This instance will use the 'public.examples.ajax' logger since it shares
       // a same root (and is the closest match)
