@@ -1,6 +1,8 @@
-# Log4JS2
+# Log4WEB
 
-##### Log4JS2 is a logging library for JavaScript inspired by the excellent Log4J library.
+This project used to be named Log4JS2, but was renamed to Log4WEB due to naming conflicts.
+
+##### Log4WEB is a logging library for JavaScript inspired by the excellent Log4J library.
 
 __Adapters__
     
