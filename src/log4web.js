@@ -1,8 +1,8 @@
 /**
- * Log4JS JavaScript Library v0.0.1
+ * Log4Web JavaScript Library v0.0.1
  * http://mjwunderlich.com/proj/log4js/
  *
- * Log4JS is a logging library for JavaScript inspired by the excellent Log4J library.
+ * Log4Web is a logging library for JavaScript inspired by the excellent Log4J library.
  *
  * As many loggers as necessary can be setup, each categorized by domain. Domains use dot-notation so
  * that hierarchies can be formed. In the application, simply request a logger by domain name, and
@@ -91,7 +91,7 @@
     });
   }
 
-  var Log4JSClass = {
+  var Log4WebClass = {
     extend: function (base, methods) {
       return $.extend({}, base.prototype, methods);
     }
@@ -100,13 +100,13 @@
   // ****** MEAT & POTATOES ****** //
 
   /**
-   * Class Log4JSRegistry
+   * Class Log4WebRegistry
    * @constructor
    */
-  var Log4JSRegistry = function () {
+  var Log4WebRegistry = function () {
     this._instancesTable = {};
   };
-  Log4JSRegistry.prototype = {
+  Log4WebRegistry.prototype = {
     find: function (domain, fullMatchOnly) {
       var items, instance;
 
@@ -128,23 +128,23 @@
 
     add: function (instance) {
       if (!!this.find(instance.domain, true)) {
-        throw new Error(format('Log4JS instance with domain \'{0}\' already registered', instance.domain));
+        throw new Error(format('Log4Web instance with domain \'{0}\' already registered', instance.domain));
       }
       this._instancesTable[instance.domain] = instance;
     },
 
     remove: function (domain) {
       if (!this.find(domain, true)) {
-        throw new Error(format('Log4JS instance with domain \'{0}\' not registered', domain));
+        throw new Error(format('Log4Web instance with domain \'{0}\' not registered', domain));
       }
       delete this._instancesTable[domain];
     }
   };
 
-  var Log4JSAdapter = function(layout) {
+  var Log4WebAdapter = function(layout) {
     this._layout = layout;
   };
-  Log4JSAdapter.prototype = Log4JSClass.extend(Object, {
+  Log4WebAdapter.prototype = Log4WebClass.extend(Object, {
     get layout() {
       return this._layout;
     },
@@ -162,14 +162,14 @@
   });
 
   /**
-   * Class Log4JSConsoleAdapter
+   * Class Log4WebConsoleAdapter
    * @constructor
    */
-  var Log4JSConsoleAdapter = function (layout) {
-    Log4JSAdapter.apply(this, arguments);
+  var Log4WebConsoleAdapter = function (layout) {
+    Log4WebAdapter.apply(this, arguments);
     this._engine = console;
   };
-  Log4JSConsoleAdapter.prototype = Log4JSClass.extend(Log4JSAdapter, {
+  Log4WebConsoleAdapter.prototype = Log4WebClass.extend(Log4WebAdapter, {
     get engine() {
       return this._engine;
     },
@@ -191,7 +191,7 @@
   });
 
   /**
-   * Class Log4JSAjaxAdapter
+   * Class Log4WebAjaxAdapter
    *
    * @param url
    * @param method
@@ -199,7 +199,7 @@
    * @param fieldName
    * @constructor
    */
-  var Log4JSAjaxAdapter = function (url, method, credentials, fieldName) {
+  var Log4WebAjaxAdapter = function (url, method, credentials, fieldName) {
     // TODO: validate it's a valid URL
     this._url = url;
     this._method = method || 'get';
@@ -208,7 +208,7 @@
       message: fieldName || 'message'
     };
   };
-  Log4JSAjaxAdapter.prototype = {
+  Log4WebAjaxAdapter.prototype = {
     get url() {
       return this._url;
     },
@@ -253,7 +253,7 @@
   };
 
   /**
-   * Class Log4JSHtmlAdapter
+   * Class Log4WebHtmlAdapter
    *
    * @param options a map of options to configure the HTML adapter, options are:
    *                - target: target DOM element to append to
@@ -262,14 +262,14 @@
    *
    * @constructor
    */
-  var Log4JSHtmlAdapter = function (options, layout) {
-    Log4JSAdapter.call(this, layout);
+  var Log4WebHtmlAdapter = function (options, layout) {
+    Log4WebAdapter.call(this, layout);
     options = options || {};
     this._target = options.target || false;
     this._template = options.template || false;
     this._messageEl = options.messageEl || false;
   };
-  Log4JSHtmlAdapter.prototype = Log4JSClass.extend(Log4JSAdapter, {
+  Log4WebHtmlAdapter.prototype = Log4WebClass.extend(Log4WebAdapter, {
     write: function (type, message) {
       var sel, template;
       sel = $(this._template);
@@ -280,13 +280,13 @@
     }
   });
 
-  var Log4JSInstance = function (domain) {
+  var Log4WebInstance = function (domain) {
     this._domain = domain;
-    this._instance = Log4JS.getLogger(domain);
+    this._instance = Log4Web.getLogger(domain);
     this._muted = 0;
   };
 
-  Log4JSInstance.prototype = {
+  Log4WebInstance.prototype = {
     get domain() {
       return this._domain;
     },
@@ -296,7 +296,7 @@
     },
 
     get instance() {
-      return this._instance || Log4JS.getLogger(domain);
+      return this._instance || Log4Web.getLogger(domain);
     },
 
     mute: function () {
@@ -332,7 +332,7 @@
 
 
   /**
-   * Class Log4JSLayout
+   * Class Log4WebLayout
    * @constructor
    *
    * What is a layout?
@@ -343,10 +343,10 @@
    * Furthermore, the layout must be exposed through a generic interface, so that any
    * Adaptor can use any layout.
    */
-  var Log4JSLayout = function (format) {
+  var Log4WebLayout = function (format) {
     this._format = format || '[{date}]: {type}: {message}';
   };
-  Log4JSLayout.prototype = {
+  Log4WebLayout.prototype = {
     format: function(date, type, message, additionalData) {
       var data = $.extend({
         date: date,
@@ -358,16 +358,16 @@
   };
 
   /**
-   * Class Log4JSJSONLayout
+   * Class Log4WebJSONLayout
    *
    * @param jsonFormat
    * @constructor
    */
-  var Log4JSJSONLayout = function(jsonFormat) {
-    Log4JSLayout.call(this, jsonFormat);
+  var Log4WebJSONLayout = function(jsonFormat) {
+    Log4WebLayout.call(this, jsonFormat);
     //this._format = $.extend({}, jsonFormat);
   };
-  Log4JSJSONLayout.prototype = Log4JSClass.extend(Log4JSLayout, {
+  Log4WebJSONLayout.prototype = Log4WebClass.extend(Log4WebLayout, {
     format: function (message, date, type, additionalData) {
       var data, format, key, value;
       data = $.extend({}, (additionalData || {}), {
@@ -386,10 +386,10 @@
   });
 
   /**
-   * Class Log4JS
+   * Class Log4Web
    * @constructor
    */
-  var Log4JS = function (domain, adapters, attachToSystemErrors) {
+  var Log4Web = function (domain, adapters, attachToSystemErrors) {
     this._domain = domain ? domain.toLowerCase() : 'null';
     this._adapters = [];
     this._attachToSystemErrors = false;
@@ -410,7 +410,7 @@
     }
   };
 
-  Log4JS.prototype = {
+  Log4Web.prototype = {
     get version() {
       return this._version.major + '.' + this._version.minor + '.' + this._version.revision;
     },
@@ -444,7 +444,7 @@
 
     registerAdapter: function (adapter) {
       if (typeof adapter != 'object' || typeof adapter.write != 'function') {
-        throw new Error('Invalid Log4JS adapter');
+        throw new Error('Invalid Log4Web adapter');
       }
       this._adapters.push(adapter);
     },
@@ -481,56 +481,56 @@
     }
   };
 
-  var log4JSLoggerRegistry = new Log4JSRegistry();
+  var Log4WebLoggerRegistry = new Log4WebRegistry();
 
   /**
    * getInstance
    *
-   * Returns the current registered Log4JS instance. If none is registered, a new instance is
+   * Returns the current registered Log4Web instance. If none is registered, a new instance is
    * created.
    *
    * @static
    * @returns {*}
    */
-  Log4JS.getLogger = function (domain) {
+  Log4Web.getLogger = function (domain) {
     domain = domain || 'null';
-    var instance = log4JSLoggerRegistry.find(domain);
+    var instance = Log4WebLoggerRegistry.find(domain);
     if (!instance && domain == 'null') {
-      instance = new Log4JS(domain);
-      log4JSLoggerRegistry.add(instance);
+      instance = new Log4Web(domain);
+      Log4WebLoggerRegistry.add(instance);
     }
     return instance;
   };
 
 
-  Log4JS.newLogger = function (domain, adapters, attach) {
-    var instance = log4JSLoggerRegistry.find(domain, true);
+  Log4Web.newLogger = function (domain, adapters, attach) {
+    var instance = Log4WebLoggerRegistry.find(domain, true);
     if (!instance) {
-      instance = new Log4JS(domain, adapters, attach);
+      instance = new Log4Web(domain, adapters, attach);
       instance.attachToSystemErrors = attach;
-      log4JSLoggerRegistry.add(instance);
+      Log4WebLoggerRegistry.add(instance);
     }
 
     //adapters && instance.registerAdapters(adapters);
     return instance;
   };
 
-  Log4JS.load = function (json) {
+  Log4Web.load = function (json) {
     var key, item;
     for (key in json) {
       item = json[key];
-      Log4JS.newLogger(key, item.adapters, item.attachToErrorHandler);
+      Log4Web.newLogger(key, item.adapters, item.attachToErrorHandler);
     }
   };
 
   // ****** EXPORTS ******* //
 
-  globals.Log4JS = Log4JS;
-  globals.Log4JSInstance = Log4JSInstance;
-  globals.Log4JSLayout = Log4JSLayout;
-  globals.Log4JSJSONLayout = Log4JSJSONLayout;
-  globals.Log4JSConsoleAdapter = Log4JSConsoleAdapter;
-  globals.Log4JSAjaxAdapter = Log4JSAjaxAdapter;
-  globals.Log4JSHtmlAdapter = Log4JSHtmlAdapter;
+  globals.Log4Web = Log4Web;
+  globals.Log4WebInstance = Log4WebInstance;
+  globals.Log4WebLayout = Log4WebLayout;
+  globals.Log4WebJSONLayout = Log4WebJSONLayout;
+  globals.Log4WebConsoleAdapter = Log4WebConsoleAdapter;
+  globals.Log4WebAjaxAdapter = Log4WebAjaxAdapter;
+  globals.Log4WebHtmlAdapter = Log4WebHtmlAdapter;
 
 })(window, window, document, jQuery);
